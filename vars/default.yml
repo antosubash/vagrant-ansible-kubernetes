@@ -1,0 +1,9 @@
+---
+app_user: "vagrant"
+http_host: "geo-wiki.local"
+http_conf: "geo-wiki.conf"
+http_port: "80"
+disable_default: true
+db_name: "vagrant"
+db_user: "vagrant"
+db_password: "vagrant"

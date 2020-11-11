@@ -1,0 +1,13 @@
+---
+- hosts: kube 
+  connection: local
+  become: true
+  vars_files:
+    - vars/default.yml
+  tasks:
+    - name: Install Packages
+      apt: 
+        update_cache: yes
+        state: latest
+        pkg:
+        - 'openssl'
