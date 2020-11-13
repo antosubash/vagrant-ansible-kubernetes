@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+# ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure("2") do |config|
   config.vm.box = "hashicorp/bionic64"
@@ -29,6 +29,18 @@ Vagrant.configure("2") do |config|
         v.nested = true
         v.cpus = 2
       end
+      # workernode.vm.provision "ansible_local" do |ansible|
+      #   ansible.playbook       = "node-playbook.yml"
+      #   ansible.become = true
+      #   ansible.limit          = "all" # or only "nodes" group, etc.
+      #   ansible.inventory_path = "/vagrant/inventory"
+      #   # ansible.pip_args = "-r /vagrant/requirements.txt"
+      #   # ansible.galaxy_role_file = "requirements.yml"
+      #   # ansible.galaxy_roles_path = "/etc/ansible/roles"
+      #   # ansible.galaxy_command = "sudo ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path} --force"
+      #   ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.2#{i}", }
+      #   ansible.raw_arguments = ["--connection=paramiko"]
+      # end
     end
   end
 
@@ -49,8 +61,8 @@ Vagrant.configure("2") do |config|
       v.cpus = 2
     end
 
-    kmaster.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "playbook.yml"
+    kmaster.vm.provision :ansible_local do |ansible|
+      ansible.playbook       = "master-playbook.yml"
       ansible.become = true
       ansible.limit          = "all" # or only "nodes" group, etc.
       ansible.inventory_path = "/vagrant/inventory"
@@ -58,7 +70,7 @@ Vagrant.configure("2") do |config|
       # ansible.galaxy_role_file = "requirements.yml"
       # ansible.galaxy_roles_path = "/etc/ansible/roles"
       # ansible.galaxy_command = "sudo ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path} --force"
-      ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3" }
+      ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.11" }
       ansible.raw_arguments = ["--connection=paramiko"]
     end
   end
