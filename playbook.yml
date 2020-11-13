@@ -1,5 +1,5 @@
 ---
-- hosts: kube
+- hosts: kmaster
   become: true
   tasks:
   - name: Install packages that allow apt to be used over HTTPS
