@@ -4,13 +4,53 @@
 # ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "hashicorp/bionic64"
+  config.vm.box = "ubuntu/bionic64"
   # config.vm.provision "shell", path: "bootstrap.sh"
   # config.ssh.insert_key = false
   config.env.enable
+  # config.vm.boot_timeout = 5
   config.vm.network "public_network", ip: "192.168.0.221", bridge: ENV["bridge"]
   config.vm.synced_folder ".", "/vagrant", type: "smb", smb_username: ENV["username"], smb_password: ENV["password"]
-  
+  config.ssh.connect_timeout = 20
+  # Kubernetes Master Server
+  config.vm.define "kmaster" do |kmaster|
+    kmaster.vm.hostname = "kmaster.example.com"
+    kmaster.vm.network "private_network", ip: "172.17.177.11"
+    kmaster.vm.provider "virtualbox" do |v|
+      v.name = "kmaster"
+      v.memory = 2048
+      v.cpus = 2
+      # Prevent VirtualBox from interfering with host audio stack
+      v.customize ["modifyvm", :id, "--audio", "none"]
+      v.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+      v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
+    end
+    kmaster.vm.provider :libvirt do |v|
+      v.memory = 2048
+      v.nested = true
+      v.cpus = 2
+    end
+
+    kmaster.vm.provision "master", type: 'ansible_local', run: "never" do |ansible|
+      ansible.playbook       = "master-playbook.yml"
+      ansible.become = true
+      ansible.limit          = "all" # or only "nodes" group, etc.
+      ansible.inventory_path = "/vagrant/inventory"
+      ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.11" }
+      ansible.raw_arguments = ["--connection=paramiko"]
+    end
+
+    kmaster.vm.provision "tool", type: 'ansible_local', run: "never" do |ansible|
+      ansible.playbook       = "tools-playbook.yml"
+      ansible.become = true
+      ansible.limit          = "all" # or only "nodes" group, etc.
+      ansible.inventory_path = "/vagrant/inventory"
+      ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.11" }
+      ansible.raw_arguments = ["--connection=paramiko"]
+    end
+  end
+
+
   NodeCount = 2
   # Kubernetes Worker Nodes
   (1..NodeCount).each do |i|
@@ -23,56 +63,22 @@ Vagrant.configure("2") do |config|
         v.cpus = 2
         # Prevent VirtualBox from interfering with host audio stack
         v.customize ["modifyvm", :id, "--audio", "none"]
+        v.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+        v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
       end
       workernode.vm.provider :libvirt do |v|
         v.memory = 2048
         v.nested = true
         v.cpus = 2
       end
-      # workernode.vm.provision "ansible_local" do |ansible|
-      #   ansible.playbook       = "node-playbook.yml"
-      #   ansible.become = true
-      #   ansible.limit          = "all" # or only "nodes" group, etc.
-      #   ansible.inventory_path = "/vagrant/inventory"
-      #   # ansible.pip_args = "-r /vagrant/requirements.txt"
-      #   # ansible.galaxy_role_file = "requirements.yml"
-      #   # ansible.galaxy_roles_path = "/etc/ansible/roles"
-      #   # ansible.galaxy_command = "sudo ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path} --force"
-      #   ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.2#{i}", }
-      #   ansible.raw_arguments = ["--connection=paramiko"]
-      # end
+      workernode.vm.provision "node", type: "ansible_local", run: "never" do |ansible|
+        ansible.playbook       = "node-playbook.yml"
+        ansible.become = true
+        ansible.limit          = "all" # or only "nodes" group, etc.
+        ansible.inventory_path = "/vagrant/inventory"
+        ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.2#{i}", }
+        ansible.raw_arguments = ["--connection=paramiko"]
+      end
     end
   end
-
-  # Kubernetes Master Server
-  config.vm.define "kmaster" do |kmaster|
-    kmaster.vm.hostname = "kmaster.example.com"
-    kmaster.vm.network "private_network", ip: "172.17.177.11"
-    kmaster.vm.provider "virtualbox" do |v|
-      v.name = "kmaster"
-      v.memory = 2048
-      v.cpus = 2
-      # Prevent VirtualBox from interfering with host audio stack
-      v.customize ["modifyvm", :id, "--audio", "none"]
-    end
-    kmaster.vm.provider :libvirt do |v|
-      v.memory = 2048
-      v.nested = true
-      v.cpus = 2
-    end
-
-    kmaster.vm.provision :ansible_local do |ansible|
-      ansible.playbook       = "master-playbook.yml"
-      ansible.become = true
-      ansible.limit          = "all" # or only "nodes" group, etc.
-      ansible.inventory_path = "/vagrant/inventory"
-      # ansible.pip_args = "-r /vagrant/requirements.txt"
-      # ansible.galaxy_role_file = "requirements.yml"
-      # ansible.galaxy_roles_path = "/etc/ansible/roles"
-      # ansible.galaxy_command = "sudo ansible-galaxy install --role-file=%{role_file} --roles-path=%{roles_path} --force"
-      ansible.extra_vars = { ansible_python_interpreter:"/usr/bin/python3", node_ip: "172.17.177.11" }
-      ansible.raw_arguments = ["--connection=paramiko"]
-    end
-  end
-
 end
