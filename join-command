@@ -1,1 +1,1 @@
-kubeadm join 172.17.177.11:6443 --token 8cvjo1.v06gqhq67bfott8d     --discovery-token-ca-cert-hash sha256:a4ed930db6c1158ca62f6017e619a8203aa3166572e7ca0fc69f88d2d789367e 
+kubeadm join 172.17.177.11:6443 --token hqghdc.jrhewzakwrvkmr5t     --discovery-token-ca-cert-hash sha256:b646f90b64b8857bfd2257073f892e12f4d78c0094df0d41d7be622c501bf50c 

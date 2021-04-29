@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
     kmaster.vm.network "private_network", ip: "172.17.177.11"
     kmaster.vm.provider "virtualbox" do |v|
       v.name = "kmaster"
-      v.memory = 2048
+      v.memory = 4096 
       v.cpus = 2
       # Prevent VirtualBox from interfering with host audio stack
       v.customize ["modifyvm", :id, "--audio", "none"]
@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
     end
     kmaster.vm.provider :libvirt do |v|
-      v.memory = 2048
+      v.memory = 4096
       v.nested = true
       v.cpus = 2
     end
@@ -59,7 +59,7 @@ Vagrant.configure("2") do |config|
       workernode.vm.network "private_network", ip: "172.17.177.2#{i}"
       workernode.vm.provider "virtualbox" do |v|
         v.name = "kworker#{i}"
-        v.memory = 2048
+        v.memory = 4096
         v.cpus = 2
         # Prevent VirtualBox from interfering with host audio stack
         v.customize ["modifyvm", :id, "--audio", "none"]
@@ -67,7 +67,7 @@ Vagrant.configure("2") do |config|
         v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
       end
       workernode.vm.provider :libvirt do |v|
-        v.memory = 2048
+        v.memory = 4096
         v.nested = true
         v.cpus = 2
       end

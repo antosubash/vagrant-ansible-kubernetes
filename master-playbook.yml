@@ -85,21 +85,27 @@
       line: Environment="KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}"
       insertafter: '\[Service\]'
 
+  - shell: "kubectl get nodes"
+    ignore_errors: true
+    register: get_nodes_cmd_out
+    become_user: vagrant
+
+  - name: Kubeadm reset
+    ignore_errors: true
+    command: kubeadm reset --force
+
   - name: Restart kubelet
     service:
       name: kubelet
       daemon_reload: yes
       state: restarted
 
-  - shell: "kubectl get nodes"
-    ignore_errors: true
-    register: get_nodes_cmd_out
-    become_user: vagrant
                       
   - debug: msg="RC={{ get_nodes_cmd_out.rc }} STDOUT={{ get_nodes_cmd_out.stdout }} STDERR={{ get_nodes_cmd_out.stderr }}"
 
+
   - name: Initialize the Kubernetes cluster using kubeadm
-    command: kubeadm init --apiserver-advertise-address="{{ node_ip }}" --apiserver-cert-extra-sans="{{ node_ip }},127.0.0.1,localhost"  --node-name master --pod-network-cidr=192.168.0.0/16
+    command: kubeadm init --apiserver-advertise-address="172.17.177.11" --node-name kmaster --pod-network-cidr=192.168.0.0/16 --v=5
     when: get_nodes_cmd_out.rc == 1
 
   - name: Setup kubeconfig for vagrant user
